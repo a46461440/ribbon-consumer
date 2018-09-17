@@ -1,5 +1,7 @@
 package com.springcloud.ribbonconsumer.action;
 
+import com.netflix.hystrix.strategy.concurrency.HystrixRequestContext;
+import com.springcloud.ribbonconsumer.service.RibbonConsumerService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,25 +21,28 @@ import java.util.Map;
 @RestController
 public class ConsumerAction {
 
+    private Log log = LogFactory.getLog(this.getClass());
+
     @Autowired
     private RestTemplate restTemplate;
 
-    private Log log = LogFactory.getLog(this.getClass());
+    @Autowired
+    private RibbonConsumerService ribbonConsumerService;
 
     @RequestMapping(value = "/send/entity/{what}", method = RequestMethod.GET)
     public String sendConsumerForEntity(@PathVariable("what") String what) {
         Map map = new HashMap();
         map.put("what", what);
-        ResponseEntity<String> entity = this.restTemplate.getForEntity("http://HELLO-PROVIDER/send/{what}", String.class, map);
-        HttpStatus status = entity.getStatusCode();
-        int statusValue = entity.getStatusCodeValue();
-        HttpHeaders headers = entity.getHeaders();
-        this.log.info(statusValue + status.toString());
-        for (Object o : headers.toSingleValueMap().entrySet()) {
-            if (o instanceof Map.Entry)
-                this.log.info(((Map.Entry) o).getKey() + ":" + ((Map.Entry) o).getValue());
-        }
-        return entity.getBody();
+//        HystrixRequestContext.initializeContext();
+        return this.ribbonConsumerService.sendConsumerForEntity(map, 1L);
+    }
+
+    @RequestMapping(value = "/send/entity/remove/{what}", method = RequestMethod.GET)
+    public String sendConsumerForEntityRemoveCache(@PathVariable("what") String what) {
+        Map map = new HashMap();
+        map.put("what", what);
+//        HystrixRequestContext.initializeContext();
+        return this.ribbonConsumerService.removeKey(map, 1L);
     }
 
     @RequestMapping(value = "/send/object/{what}", method = RequestMethod.GET)

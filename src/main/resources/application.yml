@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: ribbon-consumer
+
+server:
+  port: 9001
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://server1:11111/eureka,http://server2:11112/eureka
+
+ribbon:
+  eureka:
+    enabled: true
+  ConnectTimeout: 30
+
+HELLO-PROVIDER:
+  ribbon:
+    listofServers: http://localhost:8081,http://localhost:8082
