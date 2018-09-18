@@ -35,25 +35,25 @@ public class RibbonConsumerService {
 
     /**
      * 同步的方式 execute
-     *
+     * <p>
      * 默认抛出错误都会进入fallback，除了HystrixBadRequestException以外
      * ignoreExceptions会将大括号里面的class值都设置为直接抛出异常而不会进入fallback逻辑
-     *
+     * <p>
      * groupKey、commandKey和threadPoolKey是对该方法使用线程池的定位
      * 最精确的是threadPoolKey，通常我们可以设置threadPoolKey
-     *
      */
 //    @CacheResult(cacheKeyMethod = "getCacheKey")
+//    @HystrixCommand(fallbackMethod = "sendConsumerErrorMethod", ignoreExceptions = {RuntimeException.class, Exception.class}
+//            , groupKey = "group_key", commandKey = "commandKey", threadPoolKey = "threadPoolKey")
+    @HystrixCommand(fallbackMethod = "sendConsumerErrorMethod")
     @CacheResult
-    @HystrixCommand(fallbackMethod = "sendConsumerErrorMethod", ignoreExceptions = {RuntimeException.class, Exception.class}
-        ,groupKey = "group_key", commandKey = "commandKey", threadPoolKey = "threadPoolKey")
     public String sendConsumerForEntity(Map map, @CacheKey long id) {
 //        throw new HystrixBadRequestException("直接抛出，不进入fallback逻辑");
 //        throw new RuntimeException("配置了ignoreException，不进入fallback逻辑");
         return this.normalMethod(map);
     }
 
-//    @CacheRemove(commandKey = "commandKey", cacheKeyMethod = "getCacheKey")
+    //    @CacheRemove(commandKey = "commandKey", cacheKeyMethod = "getCacheKey")
     @CacheRemove(commandKey = "commandKey")
     public String removeKey(Map map, @CacheKey long id) {
         return "OK";
@@ -65,6 +65,7 @@ public class RibbonConsumerService {
 
     /**
      * 异步的方式 queue
+     *
      * @param map
      * @return
      */
@@ -80,6 +81,7 @@ public class RibbonConsumerService {
 
     /**
      * 通过发布订阅的模式 HotObserver
+     *
      * @param map
      * @return
      */
@@ -103,6 +105,7 @@ public class RibbonConsumerService {
 
     /**
      * 通过发布订阅的模式 ColdObserver
+     *
      * @param map
      * @return
      */
@@ -140,17 +143,18 @@ public class RibbonConsumerService {
 
     /**
      * 嵌套降级
+     *
      * @param map
      * @return
      */
     @HystrixCommand(fallbackMethod = "connotDoAnything")
-    public String sendConsumerErrorMethod(Map map, Throwable e) {
+    public String sendConsumerErrorMethod(Map map, long id, Throwable e) {
         this.log.info(e);
         this.log.info(map);
         return "降级一次";
     }
 
-    public String connotDoAnything(Map map) {
+    public String connotDoAnything(Map map, long id) {
         return "降级两次";
     }
 

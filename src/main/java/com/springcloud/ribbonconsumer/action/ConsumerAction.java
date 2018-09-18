@@ -33,15 +33,16 @@ public class ConsumerAction {
     public String sendConsumerForEntity(@PathVariable("what") String what) {
         Map map = new HashMap();
         map.put("what", what);
-//        HystrixRequestContext.initializeContext();
-        return this.ribbonConsumerService.sendConsumerForEntity(map, 1L);
+        HystrixRequestContext.initializeContext();
+        String result = this.ribbonConsumerService.sendConsumerForEntity(map, 1L);
+        return result;
     }
 
     @RequestMapping(value = "/send/entity/remove/{what}", method = RequestMethod.GET)
     public String sendConsumerForEntityRemoveCache(@PathVariable("what") String what) {
         Map map = new HashMap();
         map.put("what", what);
-//        HystrixRequestContext.initializeContext();
+        HystrixRequestContext.initializeContext();
         return this.ribbonConsumerService.removeKey(map, 1L);
     }
 
