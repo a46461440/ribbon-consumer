@@ -15,6 +15,14 @@ ribbon:
     enabled: true
   ConnectTimeout: 30
 
-HELLO-PROVIDER:
-  ribbon:
-    listofServers: http://localhost:8081,http://localhost:8082
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 1000
+          strategy: SEMAPHORE
+#HELLO-PROVIDER:
+#  ribbon:
+#    listofServers: http://localhost:8081,http://localhost:8082

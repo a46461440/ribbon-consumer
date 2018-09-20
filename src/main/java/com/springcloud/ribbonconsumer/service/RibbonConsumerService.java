@@ -1,6 +1,8 @@
 package com.springcloud.ribbonconsumer.service;
 
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCollapser;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import com.netflix.hystrix.contrib.javanica.annotation.ObservableExecutionMode;
 import com.netflix.hystrix.contrib.javanica.cache.annotation.CacheKey;
 import com.netflix.hystrix.contrib.javanica.cache.annotation.CacheRemove;
@@ -20,7 +22,10 @@ import rx.Observable;
 import rx.Subscriber;
 
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 为测试不符合MVC规范
@@ -33,6 +38,10 @@ public class RibbonConsumerService {
     @Autowired
     private RestTemplate restTemplate;
 
+    @HystrixCollapser(batchMethod = "sendConsumerForEntity2", collapserProperties = {
+            @HystrixProperty(name = "timerDelayInMilliseconds", value = "1000")
+    })
+
     /**
      * 同步的方式 execute
      * <p>
@@ -42,11 +51,10 @@ public class RibbonConsumerService {
      * groupKey、commandKey和threadPoolKey是对该方法使用线程池的定位
      * 最精确的是threadPoolKey，通常我们可以设置threadPoolKey
      */
-//    @CacheResult(cacheKeyMethod = "getCacheKey")
-//    @HystrixCommand(fallbackMethod = "sendConsumerErrorMethod", ignoreExceptions = {RuntimeException.class, Exception.class}
-//            , groupKey = "group_key", commandKey = "commandKey", threadPoolKey = "threadPoolKey")
-    @HystrixCommand(fallbackMethod = "sendConsumerErrorMethod")
-    @CacheResult
+    @CacheResult(cacheKeyMethod = "getCacheKey")
+    @HystrixCommand(fallbackMethod = "sendConsumerErrorMethod", ignoreExceptions = {RuntimeException.class, Exception.class}
+            , groupKey = "group_key", commandKey = "commandKey", threadPoolKey = "threadPoolKey")
+    @HystrixProperty(name = "execution.isolation.thread.timeoutinMilliseconds", value = "0")
     public String sendConsumerForEntity(Map map, @CacheKey long id) {
 //        throw new HystrixBadRequestException("直接抛出，不进入fallback逻辑");
 //        throw new RuntimeException("配置了ignoreException，不进入fallback逻辑");
@@ -59,7 +67,8 @@ public class RibbonConsumerService {
         return "OK";
     }
 
-    private String getCacheKey(Map map) {
+    private String getCacheKey(Map map, long id) {
+//        return new Random().nextInt() + "";
         return "cacheKey";
     }
 
@@ -69,8 +78,9 @@ public class RibbonConsumerService {
      * @param map
      * @return
      */
+    @CacheResult
     @HystrixCommand(fallbackMethod = "sendConsumerErrorMethod")
-    public Future<String> sendConsumerForEntity2(Map map) {
+    public Future<String> sendConsumerForEntity2(Map map, long id) {
         return new AsyncResult<String>() {
             @Override
             public String invoke() {
