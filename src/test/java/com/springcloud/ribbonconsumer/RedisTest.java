@@ -5,6 +5,7 @@ import org.junit.Test;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 
 public class RedisTest {
@@ -33,6 +34,21 @@ public class RedisTest {
         System.out.println(this.jedis.get("have"));
         Thread.sleep(4000);
         System.out.println(this.jedis.get("have"));
+    }
+
+    @Test
+    public void testReturnThread() {
+        this.getCall();
+    }
+
+    private Callable getCall() {
+        return new Callable() {
+            @Override
+            public Object call() throws Exception {
+                System.out.print("ok");
+                return null;
+            }
+        };
     }
 
 }
